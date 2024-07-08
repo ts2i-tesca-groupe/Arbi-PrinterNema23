@@ -1,0 +1,11 @@
+Controlling multiple NEMA 23 motors with AccelStepper...
+https://forum.arduino.cc/t/controlling-multiple-nema-23-motors-with-accelstepper/638902
+
+TB6600 Stepper Motor Driver with Arduino
+https://www.youtube.com/watch?v=idVcItHfGS4
+
+Nema Stepper Motor 23 With Tb6600 Driver With Arduino Due
+https://www.instructables.com/Nema-Stepper-Motor-23-With-Tb6600-Driver-With-Ardu/
+
+Tutorial: Control Stepper Motor using TB6600 Driver and Arduino code
+https://www.linkedin.com/pulse/tutorial-control-stepper-motor-using-tb6600-driver-arduino-singh
