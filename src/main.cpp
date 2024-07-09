@@ -1,23 +1,27 @@
 #include <Arduino.h>
+#include <AccelStepper.h>
 
-const int ena = 2;          // habilita o motor
-const int dir = 3;          // determina a direção
-const int pul = 4;          // executa um passo
-const int intervalo = 350;  // intervalo entre as
-                            //  mudanças de estado do pulso
-boolean pulso = LOW;  // estado do pulso
+const int ena = 2;          // enable pin
+const int dir = 3;          // direction pin
+const int pul = 4;          // pulse pin
+const int motorInterfaceType = 1;
+
+AccelStepper myStepper(motorInterfaceType, pul, dir);
+
 
 void setup() {
     pinMode(ena, OUTPUT);
-    pinMode(dir, OUTPUT);
-    pinMode(pul, OUTPUT);
-    digitalWrite(ena, LOW);   // habilita em low invertida
-    digitalWrite(dir, HIGH);  // low CW / high CCW
-    digitalWrite(pul, HIGH);  // borda de descida
+    digitalWrite(ena, LOW);   // Activer le driver
+
+    myStepper.setAcceleration(5000);
+    myStepper.setMaxSpeed(3200);
 }
 
 void loop() {
-    pulso = !pulso;            // inverte o estado da variável
-    digitalWrite(pul, pulso);  // atribui o novo estado à porta
-    delayMicroseconds(intervalo);
+    myStepper.moveTo(100000);
+    myStepper.runToPosition();
+    delay(1000);
+    myStepper.moveTo(0);
+    myStepper.runToPosition();
+    delay(1000);
 }
