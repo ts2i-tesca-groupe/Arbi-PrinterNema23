@@ -9,3 +9,9 @@ https://www.instructables.com/Nema-Stepper-Motor-23-With-Tb6600-Driver-With-Ardu
 
 Tutorial: Control Stepper Motor using TB6600 Driver and Arduino code
 https://www.linkedin.com/pulse/tutorial-control-stepper-motor-using-tb6600-driver-arduino-singh
+
+Stepper Motor Calculator
+https://www.allaboutcircuits.com/tools/stepper-motor-calculator/
+
+NEMA 23 Stepper Motor
+https://components101.com/motors/nema-23-stepper-motor-datasheet-specs
