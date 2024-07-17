@@ -1,7 +1,21 @@
 #include <Arduino.h>
+#include <MagicPot.h>
 
-void setup(){
-  Serial.begin(9600);
-  Serial.println("Bonjour");
+#define DEBUG_BAUDIOS 9600
+#define POTENTIOMETER_PIN A0
+
+MagicPot potentiometer(POTENTIOMETER_PIN);
+
+void setup()
+{
+	Serial.begin(DEBUG_BAUDIOS);
+
+	potentiometer.begin();
 }
-void loop(){}
+
+void loop()
+{
+	potentiometer.read();
+
+	Serial.println(String("Raw value: ") + potentiometer.getRawValue());
+}
