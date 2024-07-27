@@ -22,17 +22,11 @@ void setup()
 	Serial.begin(DEBUG_BAUDIOS);
 
 	potentiometer.begin();
-
-    Serial.println(String("Testing ... ") + map(940, 0, 1023, 0, 500000));
 }
 
 void loop()
 {
 	potentiometer.read();
-    
-    Serial.println(String("Testing ... ") + map(940, 0, 1023, 0, 500000));
-	//Serial.println(String("Raw value: ") + potentiometer.getRawValue()
-    //    + String(" value: ") + potentiometer.getValue());
 
     delay(1000);
 }
