@@ -28,7 +28,8 @@ const uint8_t motorInterfaceType = AccelStepper::DRIVER;
 const uint8_t home = 5;
 const uint8_t rightlimit = 6;
 const uint8_t startcyc = 7;
-const uint8_t selectorpins[4] = {8, 9, 10, 11};
+const uint8_t nbpins = 4;
+const uint8_t selectorpins[nbpins] = {8, 9, 10, 12};
 
 const size_t ncycles[4] = {50, 3, 5, 8};
 const float lcycles[4] = {400, 142.33, 100.75, 52.5};//439
@@ -57,13 +58,14 @@ unsigned long mm2steps(float mm) {
 }
 
 uint8_t getCycle() {
-    return 0;
     uint8_t pos = 0;
-    for (size_t i = 0; i < 4; i++) {
-        pos += (i + 1) * digitalRead(selectorpins[i]);
+    for (size_t i = 0; i < nbpins; i++) {
+        pos += (i + 1) * !digitalRead(selectorpins[i]);
+        /*Serial.print(String("getCycle() i = ") + i + String(" !digitalRead(selectorpins[i] = ") + !digitalRead(selectorpins[i]) + String(" pos = ") + pos);*/
     }
+    Serial.println(String("getCycle() pos = ") + pos);
 
-    problem = pos == 0 || pos > 4;
+    if (pos == 0 || pos > 4) {return -1;}
     return --pos;
 }
 
@@ -101,9 +103,9 @@ void setup() {
     // potentiometer.onChange(speedUpdate, false);
     pinMode(home, INPUT);
     pinMode(rightlimit, INPUT);
-    pinMode(startcyc, INPUT);
-    for (size_t j = 0; j < 4; j++) {
-        pinMode(selectorpins[j], INPUT);
+    pinMode(startcyc, INPUT_PULLUP);
+    for (size_t j = 0; j < nbpins; j++) {
+        pinMode(selectorpins[j], INPUT_PULLUP);
     }
 
     myStepper.setPinsInverted(false, false, true);
@@ -115,7 +117,12 @@ void setup() {
 }
 
 void loop() {
-    
+    for (size_t i = 0; i < nbpins; i++){
+        Serial.print(digitalRead(selectorpins[i]) + String(" "));
+    }
+    Serial.println(String(" --- ") + getCycle());
+    delay(500);
+    return;
     if (digitalRead(startcyc) && !problem) {
         Serial.print("Starting : ACCEL = ");
         Serial.print(ACCEL_HOME);
@@ -124,6 +131,7 @@ void loop() {
         Serial.print(" MICROSTEPS = ");
         Serial.println(MICROSTEPS);
         int ncycle = getCycle();
+        if (ncycle == 255) return;
         for (size_t i = 0; !problem && !digitalRead(home) && i < ncycles[ncycle]; i++) {
             //Serial.println(mm2steps(lcycles[ncycle]) * nrev);
             uint16_t currSpeed = potentiometer.getValue();
