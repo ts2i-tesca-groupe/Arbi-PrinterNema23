@@ -101,8 +101,8 @@ void setup() {
     Serial.begin(DEBUG_BAUDIOS);
 	potentiometer.begin();
     // potentiometer.onChange(speedUpdate, false);
-    pinMode(home, INPUT);
-    pinMode(rightlimit, INPUT);
+    pinMode(home, INPUT_PULLUP);
+    pinMode(rightlimit, INPUT_PULLUP);
     pinMode(startcyc, INPUT_PULLUP);
     for (size_t j = 0; j < nbpins; j++) {
         pinMode(selectorpins[j], INPUT_PULLUP);
@@ -117,10 +117,8 @@ void setup() {
 }
 
 void loop() {
-    for (size_t i = 0; i < nbpins; i++){
-        Serial.print(digitalRead(selectorpins[i]) + String(" "));
-    }
-    Serial.println(String(" --- ") + getCycle());
+    Serial.println(String("Home : ") + digitalRead(home) + String(" ") + 
+    String("rightlimit : ") + digitalRead(rightlimit) + String(" "));
     delay(500);
     return;
     if (digitalRead(startcyc) && !problem) {
