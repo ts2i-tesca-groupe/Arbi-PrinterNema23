@@ -78,7 +78,7 @@ void goHome() {
     while (myStepper.isRunning()) {
         myStepper.run();
         Serial.println(myStepper.currentPosition());
-        if (digitalRead(home) == HIGH) {
+        if (digitalRead(home) == LOW) {
             Serial.println("Home");
             myStepper.stop();
             myStepper.setCurrentPosition(0);
@@ -130,7 +130,7 @@ void loop() {
         Serial.println(MICROSTEPS);
         int ncycle = getCycle();
         if (ncycle == 255) return;
-        for (size_t i = 0; !problem && !digitalRead(home) && i < ncycles[ncycle]; i++) {
+        for (size_t i = 0; !problem && digitalRead(home) && i < ncycles[ncycle]; i++) {
             //Serial.println(mm2steps(lcycles[ncycle]) * nrev);
             uint16_t currSpeed = potentiometer.getValue();
             myStepper.setAcceleration(currSpeed / DEVISER);
@@ -140,7 +140,7 @@ void loop() {
             myStepper.move(mm2steps(lcycles[ncycle]) * nrev);
             mtime[0] = MEASURE
             while (myStepper.isRunning()) {
-                if (false && digitalRead(rightlimit)) {
+                if (false && !digitalRead(rightlimit)) {
                     Serial.println("Limit reached rightlimit");
                     myStepper.stop();
                     // myStepper.disableOutputs();
@@ -163,7 +163,7 @@ void loop() {
             mtime[2] = MEASURE
             
             while (myStepper.isRunning() && !problem) {
-                if (digitalRead(home)) {
+                if (!digitalRead(home)) {
                     Serial.println("Limit reached home");
                     myStepper.stop();
                     // myStepper.disableOutputs();
