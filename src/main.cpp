@@ -39,7 +39,7 @@ unsigned long nsteps = 0;
 unsigned long nrev = 10;
 bool problem = false;
 bool homedetected = false;
-MagicPot potentiometer(POTENTIOMETER_PIN, 0, MAX_SPEED, MAX_RAW_VALUE_DEFAULT);
+MagicPot potentiometer(POTENTIOMETER_PIN, 10, MAX_SPEED, MAX_RAW_VALUE_DEFAULT);
 
 uint16_t oldSpeed = 0;
 void speedUpdate(){
