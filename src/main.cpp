@@ -10,13 +10,14 @@
 #define NBCYCLES        1
 
 
-#define SPEED           1500
-#define ACCEL           SPEED / 4
+#define SPEED_HOME           1000
+#define ACCEL_HOME           750
 
 #define DEBUG_BAUDIOS       115200
 #define POTENTIOMETER_PIN   A1
 #define MIN_VAL_CHANGE      5
-#define MAX_SPEED           500000
+#define MAX_SPEED           20000
+#define DEVISER             0.5
 
 
 // Pins declaration
@@ -29,13 +30,13 @@ const uint8_t rightlimit = 6;
 const uint8_t startcyc = 7;
 const uint8_t selectorpins[4] = {8, 9, 10, 11};
 
-const size_t ncycles[4] = {1, 3, 5, 8};
-const float lcycles[4] = {439, 142.33, 100.75, 52.5};
+const size_t ncycles[4] = {50, 3, 5, 8};
+const float lcycles[4] = {400, 142.33, 100.75, 52.5};//439
 const float p = 40.05;
 
 unsigned long mtime[4];
 unsigned long nsteps = 0;
-unsigned long nrev = 1;
+unsigned long nrev = 10;
 bool problem = false;
 bool homedetected = false;
 MagicPot potentiometer(POTENTIOMETER_PIN, 0, MAX_SPEED, MAX_RAW_VALUE_DEFAULT);
@@ -49,8 +50,6 @@ void speedUpdate(){
     
 }
 
-size_t i = 0;
-
 AccelStepper myStepper(motorInterfaceType, pul, dir);
 
 unsigned long mm2steps(float mm) {
@@ -58,7 +57,7 @@ unsigned long mm2steps(float mm) {
 }
 
 uint8_t getCycle() {
-    return 3;
+    return 0;
     uint8_t pos = 0;
     for (size_t i = 0; i < 4; i++) {
         pos += (i + 1) * digitalRead(selectorpins[i]);
@@ -69,9 +68,9 @@ uint8_t getCycle() {
 }
 
 void goHome() {
-    myStepper.setAcceleration(ACCEL);
-    myStepper.setMaxSpeed(SPEED);
-    //myStepper.moveTo(-mm2steps(MAXLENGTH));
+    myStepper.setAcceleration(ACCEL_HOME);
+    myStepper.setMaxSpeed(SPEED_HOME);
+    myStepper.moveTo(-mm2steps(MAXLENGTH));
     Serial.println("Goging home");
     return;
     while (myStepper.isRunning()) {
@@ -99,6 +98,7 @@ void goHome() {
 void setup() {
     Serial.begin(DEBUG_BAUDIOS);
 	potentiometer.begin();
+    // potentiometer.onChange(speedUpdate, false);
     pinMode(home, INPUT);
     pinMode(rightlimit, INPUT);
     pinMode(startcyc, INPUT);
@@ -115,17 +115,22 @@ void setup() {
 }
 
 void loop() {
-    potentiometer.read();
+    
     if (digitalRead(startcyc) && !problem) {
         Serial.print("Starting : ACCEL = ");
-        Serial.print(ACCEL);
+        Serial.print(ACCEL_HOME);
         Serial.print(" SPEED = ");
-        Serial.print(SPEED);
+        Serial.print(SPEED_HOME);
         Serial.print(" MICROSTEPS = ");
         Serial.println(MICROSTEPS);
         int ncycle = getCycle();
-        for (; !problem && !digitalRead(home) && i < NBCYCLES; i++) {
+        for (size_t i = 0; !problem && !digitalRead(home) && i < ncycles[ncycle]; i++) {
             //Serial.println(mm2steps(lcycles[ncycle]) * nrev);
+            uint16_t currSpeed = potentiometer.getValue();
+            myStepper.setAcceleration(currSpeed / DEVISER);
+            myStepper.setMaxSpeed(currSpeed);
+            Serial.println(String("maxSpeed: ") + currSpeed +
+                String("\tAccel: ") + currSpeed / DEVISER);
             myStepper.move(mm2steps(lcycles[ncycle]) * nrev);
             mtime[0] = MEASURE
             while (myStepper.isRunning()) {
@@ -137,14 +142,20 @@ void loop() {
                     break;
                 }
                 myStepper.run();
+                potentiometer.read();
             }
             mtime[1] = MEASURE
             //return;
             //Serial.println(myStepper.currentPosition());
             //Serial.println(-(signed)mm2steps(lcycles[ncycle] * nrev));
+            currSpeed = potentiometer.getValue();
+            myStepper.setAcceleration(currSpeed / DEVISER);
+            myStepper.setMaxSpeed(currSpeed);
+            Serial.println(String("------maxSpeed: ") + currSpeed +
+                String("\tAccel: ") + currSpeed / DEVISER);
             myStepper.move(-mm2steps(lcycles[ncycle] * nrev));
             mtime[2] = MEASURE
-            /*
+            
             while (myStepper.isRunning() && !problem) {
                 if (digitalRead(home)) {
                     Serial.println("Limit reached home");
@@ -154,9 +165,10 @@ void loop() {
                     break;
                 }
                 myStepper.run();
+                potentiometer.read();
             }
             mtime[3] = MEASURE
-            */
+            /**/
             //Serial.println(myStepper.currentPosition());
             //Serial.println(String("i = ") + i);
 
