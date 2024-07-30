@@ -117,8 +117,17 @@ void setup() {
 }
 
 void loop() {
-    Serial.println(String("Home : ") + digitalRead(home) + String(" ") + 
+    Serial.println(String("startcyc : ") + digitalRead(startcyc) + String(" ") + 
+    String("Home : ") + digitalRead(home) + String(" ") + 
     String("rightlimit : ") + digitalRead(rightlimit) + String(" "));
+    for (size_t i = 0; i < nbpins; i++){
+        Serial.print(String(" ") + digitalRead(selectorpins[i]));
+    }
+    Serial.println();
+    potentiometer.read();
+    Serial.println(String("Potentio : ") + potentiometer.getValue());
+    // Serial.println(String("Home : ") + digitalRead(home) + String(" ") + 
+    // String("rightlimit : ") + digitalRead(rightlimit) + String(" "));
     delay(500);
     return;
     if (digitalRead(startcyc) && !problem) {
