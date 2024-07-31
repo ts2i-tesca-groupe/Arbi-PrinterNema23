@@ -73,18 +73,17 @@ void goHome() {
     myStepper.setAcceleration(ACCEL_HOME);
     myStepper.setMaxSpeed(SPEED_HOME);
     myStepper.moveTo(-mm2steps(MAXLENGTH));
-    Serial.println("Goging home");
-    return;
+    Serial.println(String("Goging home ") + myStepper.targetPosition());
     while (myStepper.isRunning()) {
         myStepper.run();
         Serial.println(myStepper.currentPosition());
-        if (digitalRead(home) == LOW) {
-            Serial.println("Home");
-            myStepper.stop();
-            myStepper.setCurrentPosition(0);
-            homedetected = true;
-            break;
-        }
+        // if (digitalRead(home) == HIGH) {
+        //     Serial.println("Home");
+        //     myStepper.stop();
+        //     myStepper.setCurrentPosition(0);
+        //     homedetected = true;
+        //     break;
+        // }
     }
     if (!homedetected) {
         myStepper.disableOutputs();
@@ -117,6 +116,7 @@ void setup() {
 }
 
 void loop() {
+    return;
     Serial.println(String("startcyc : ") + digitalRead(startcyc) + String(" ") + 
     String("Home : ") + digitalRead(home) + String(" ") + 
     String("rightlimit : ") + digitalRead(rightlimit) + String(" "));
