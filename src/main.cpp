@@ -3,22 +3,20 @@
 #include <MagicPot.h>
 
 // #define MEASURE millis();
-#define MEASURE         micros();
-#define MICROSTEPS      400
-#define MAXLENGTH       600
-#define ZEROPOS         20
-#define NBCYCLES        1
+#define MEASURE micros();
+#define MICROSTEPS 400
+#define MAXLENGTH 600
+#define ZEROPOS 20
+#define NBCYCLES 1
 
+#define SPEED_HOME 1000
+#define ACCEL_HOME 750
 
-#define SPEED_HOME           1000
-#define ACCEL_HOME           750
-
-#define DEBUG_BAUDIOS       115200
-#define POTENTIOMETER_PIN   A1
-#define MIN_VAL_CHANGE      5
-#define MAX_SPEED           20000
-#define DEVISER             0.5
-
+#define DEBUG_BAUDIOS 115200
+#define POTENTIOMETER_PIN A1
+#define MIN_VAL_CHANGE 5
+#define MAX_SPEED 20000
+#define DEVISER 0.5
 
 // Pins declaration
 const uint8_t ena = 2;  // enable pin
@@ -28,11 +26,11 @@ const uint8_t motorInterfaceType = AccelStepper::DRIVER;
 const uint8_t home = 5;
 const uint8_t rightlimit = 6;
 const uint8_t startcyc = 7;
-const uint8_t nbpins = 4;
-const uint8_t selectorpins[nbpins] = {8, 9, 10, 12};
+const uint8_t nbpins = 5;
+const uint8_t selectorpins[nbpins] = {8, 9, 10, 11, 12};
 
 const size_t ncycles[4] = {50, 3, 5, 8};
-const float lcycles[4] = {400, 142.33, 100.75, 52.5};//439
+const float lcycles[4] = {400, 142.33, 100.75, 52.5};  // 439
 const float p = 40.05;
 
 unsigned long mtime[4];
@@ -43,12 +41,11 @@ bool homedetected = false;
 MagicPot potentiometer(POTENTIOMETER_PIN, 10, MAX_SPEED, MAX_RAW_VALUE_DEFAULT);
 
 uint16_t oldSpeed = 0;
-void speedUpdate(){
-    if (abs(potentiometer.getRawValue() - oldSpeed) > MIN_VAL_CHANGE){
+void speedUpdate() {
+    if (abs(potentiometer.getRawValue() - oldSpeed) > MIN_VAL_CHANGE) {
         /* update speed */
         oldSpeed = potentiometer.getRawValue();
     }
-    
 }
 
 AccelStepper myStepper(motorInterfaceType, pul, dir);
@@ -65,19 +62,48 @@ uint8_t getCycle() {
     }
     Serial.println(String("getCycle() pos = ") + pos);
 
-    if (pos == 0 || pos > 4) {return -1;}
+    if (pos == 0 || pos > 4) {
+        return -1;
+    }
     return --pos;
 }
-
+int cpt = 0;
+int tnb0[7] = {0, 0, 0, 0, 0, 0, 0};
 void goHome() {
+    // return;
     myStepper.setAcceleration(ACCEL_HOME);
     myStepper.setMaxSpeed(SPEED_HOME);
     myStepper.moveTo(-mm2steps(MAXLENGTH));
     Serial.println(String("Goging home ") + myStepper.targetPosition());
+    int nb0 = 0, newnb = 0;
     while (myStepper.isRunning()) {
         myStepper.run();
-        Serial.println(myStepper.currentPosition());
-        // if (digitalRead(home) == HIGH) {
+        tnb0[0] += !digitalRead(startcyc);
+        tnb0[1] += !digitalRead(home);
+        tnb0[2] += !digitalRead(rightlimit);
+        tnb0[3] += !digitalRead(selectorpins[0]);
+        tnb0[4] += !digitalRead(selectorpins[1]);
+        tnb0[5] += !digitalRead(selectorpins[2]);
+        tnb0[6] += !digitalRead(selectorpins[3]);
+
+        if (cpt % 100 == 0) {
+            Serial.println(myStepper.currentPosition() + 
+                String(" cpt1 : ") + cpt +
+                String(" startcyc : ") + tnb0[0] + String(" ") +
+                String("Home : ") + tnb0[1] + String(" ") +
+                String("rightlimit : ") + tnb0[2] + String(" ") +
+                tnb0[3] + String(" ") + tnb0[4] + String(" ") + tnb0[5] +
+                String(" ") + tnb0[6]);
+        }
+        cpt++;
+        continue;
+        bool status = digitalRead(home);
+        nb0 += !status;
+        if (nb0 != newnb) {
+            Serial.println(myStepper.currentPosition() + String(" Home: ") + status + String(" nb0: ") + nb0);
+            newnb = nb0;
+        }
+        // if (!digitalRead(home)) {
         //     Serial.println("Home");
         //     myStepper.stop();
         //     myStepper.setCurrentPosition(0);
@@ -98,7 +124,7 @@ void goHome() {
 
 void setup() {
     Serial.begin(DEBUG_BAUDIOS);
-	potentiometer.begin();
+    potentiometer.begin();
     // potentiometer.onChange(speedUpdate, false);
     pinMode(home, INPUT_PULLUP);
     pinMode(rightlimit, INPUT_PULLUP);
@@ -117,18 +143,38 @@ void setup() {
 
 void loop() {
     return;
-    Serial.println(String("startcyc : ") + digitalRead(startcyc) + String(" ") + 
-    String("Home : ") + digitalRead(home) + String(" ") + 
-    String("rightlimit : ") + digitalRead(rightlimit) + String(" "));
-    for (size_t i = 0; i < nbpins; i++){
+
+    tnb0[0] += !digitalRead(startcyc);
+    tnb0[1] += !digitalRead(home);
+    tnb0[2] += !digitalRead(rightlimit);
+    tnb0[3] += !digitalRead(selectorpins[0]);
+    tnb0[4] += !digitalRead(selectorpins[1]);
+    tnb0[5] += !digitalRead(selectorpins[2]);
+    tnb0[6] += !digitalRead(selectorpins[3]);
+
+    if (cpt % 500 == 0) {
+        Serial.println(String("cpt : ") + cpt +
+                       String("startcyc : ") + tnb0[0] + String(" ") +
+                       String("Home : ") + tnb0[1] + String(" ") +
+                       String("rightlimit : ") + tnb0[2] + String(" ") +
+                       tnb0[3] + String(" ") + tnb0[4] + String(" ") + tnb0[5] +
+                       String(" ") + tnb0[6]);
+    }
+    cpt++;
+    return;
+
+    Serial.println(String("startcyc : ") + digitalRead(startcyc) + String(" ") +
+                   String("Home : ") + digitalRead(home) + String(" ") +
+                   String("rightlimit : ") + digitalRead(rightlimit) + String(" "));
+    for (size_t i = 0; i < nbpins; i++) {
         Serial.print(String(" ") + digitalRead(selectorpins[i]));
     }
     Serial.println();
     potentiometer.read();
     Serial.println(String("Potentio : ") + potentiometer.getValue());
-    // Serial.println(String("Home : ") + digitalRead(home) + String(" ") + 
+    // Serial.println(String("Home : ") + digitalRead(home) + String(" ") +
     // String("rightlimit : ") + digitalRead(rightlimit) + String(" "));
-    delay(500);
+    // delay(1500);
     return;
     if (digitalRead(startcyc) && !problem) {
         Serial.print("Starting : ACCEL = ");
@@ -140,15 +186,14 @@ void loop() {
         int ncycle = getCycle();
         if (ncycle == 255) return;
         for (size_t i = 0; !problem && digitalRead(home) && i < ncycles[ncycle]; i++) {
-            //Serial.println(mm2steps(lcycles[ncycle]) * nrev);
+            // Serial.println(mm2steps(lcycles[ncycle]) * nrev);
             uint16_t currSpeed = potentiometer.getValue();
             myStepper.setAcceleration(currSpeed / DEVISER);
             myStepper.setMaxSpeed(currSpeed);
             Serial.println(String("maxSpeed: ") + currSpeed +
-                String("\tAccel: ") + currSpeed / DEVISER);
+                           String("\tAccel: ") + currSpeed / DEVISER);
             myStepper.move(mm2steps(lcycles[ncycle]) * nrev);
-            mtime[0] = MEASURE
-            while (myStepper.isRunning()) {
+            mtime[0] = MEASURE while (myStepper.isRunning()) {
                 if (false && !digitalRead(rightlimit)) {
                     Serial.println("Limit reached rightlimit");
                     myStepper.stop();
@@ -160,18 +205,18 @@ void loop() {
                 potentiometer.read();
             }
             mtime[1] = MEASURE
-            //return;
-            //Serial.println(myStepper.currentPosition());
-            //Serial.println(-(signed)mm2steps(lcycles[ncycle] * nrev));
-            currSpeed = potentiometer.getValue();
+                // return;
+                // Serial.println(myStepper.currentPosition());
+                // Serial.println(-(signed)mm2steps(lcycles[ncycle] * nrev));
+                currSpeed = potentiometer.getValue();
             myStepper.setAcceleration(currSpeed / DEVISER);
             myStepper.setMaxSpeed(currSpeed);
             Serial.println(String("------maxSpeed: ") + currSpeed +
-                String("\tAccel: ") + currSpeed / DEVISER);
+                           String("\tAccel: ") + currSpeed / DEVISER);
             myStepper.move(-mm2steps(lcycles[ncycle] * nrev));
             mtime[2] = MEASURE
-            
-            while (myStepper.isRunning() && !problem) {
+
+                while (myStepper.isRunning() && !problem) {
                 if (!digitalRead(home)) {
                     Serial.println("Limit reached home");
                     myStepper.stop();
@@ -183,19 +228,24 @@ void loop() {
                 potentiometer.read();
             }
             mtime[3] = MEASURE
-            /**/
-            //Serial.println(myStepper.currentPosition());
-            //Serial.println(String("i = ") + i);
+                           /**/
+                           // Serial.println(myStepper.currentPosition());
+                           // Serial.println(String("i = ") + i);
 
-            Serial.print(nsteps++);
+                           Serial.print(nsteps++);
             Serial.print("-->\t[");
-            Serial.print(mtime[0]);Serial.print(",\t");
-            Serial.print(mtime[1]);Serial.print("]\t");
-            Serial.print(mtime[1] - mtime[0]);Serial.print("\t");
+            Serial.print(mtime[0]);
+            Serial.print(",\t");
+            Serial.print(mtime[1]);
+            Serial.print("]\t");
+            Serial.print(mtime[1] - mtime[0]);
+            Serial.print("\t");
             Serial.print(static_cast<float>(((mtime[1] - mtime[0]) * 1000 / MICROSTEPS)));
             Serial.print("\t*****\t[");
-            Serial.print(mtime[2]);Serial.print(",\t");
-            Serial.print(mtime[3]);Serial.print("]\t");
+            Serial.print(mtime[2]);
+            Serial.print(",\t");
+            Serial.print(mtime[3]);
+            Serial.print("]\t");
             Serial.print(mtime[3] - mtime[2]);
             Serial.print("\t");
             Serial.print(static_cast<float>((1000 * 1000 / (mtime[3] - mtime[2]))));
@@ -203,7 +253,6 @@ void loop() {
             Serial.println(static_cast<float>(((mtime[3] - mtime[2]) * 1000 / MICROSTEPS)));
         }
     }
-    
 
     // nsteps++;
     /*myStepper.run();
