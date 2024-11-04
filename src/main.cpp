@@ -14,6 +14,7 @@
 
 #define DEBUG_BAUDIOS 115200
 #define POTENTIOMETER_PIN A1
+// Update this line to set the max speed
 #define MAX_SPEED 20000
 #define DEVISER 0.5
 
@@ -30,6 +31,7 @@ const uint8_t selectorpins[nbpins] = {8, 9, 10, 11, 12};
 const uint8_t printer = 13;
 
 const size_t ncycles[4] = {1, 3, 4, 8};
+// Update this line according to different lenghts (in mm)
 const float lcycles[4] = {400, 142.33, 100.75, 52.5};  // 439
 const float p = 40.05;
 
@@ -180,6 +182,7 @@ void loop() {
             //                 String(" distanceToGo: ") + myStepper.distanceToGo());
             myStepper.run();
         }
+        myStepper.setAcceleration(MAX_SPEED);
         myStepper.move(-nsteps * ncycles[ncycle]);
         while (myStepper.isRunning() && !problem) {
             if (!digitalRead(home)) {
